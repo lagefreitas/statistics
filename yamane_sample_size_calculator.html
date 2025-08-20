@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calculadora – Tamanho da Amostra (Fórmula de Yamane) - Prof. André Lage Freitas (<a href="https://www.instagram.com/prof.lage" target="_blank">Instagram</a>, <a href="https://www.linkedin.com/in/lage" target="_blank">LinkedIn</a) </title>
+  <style>
+    :root {
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      line-height: 1.45;
+      margin: 0;
+      background: #f6f7fb;
+      color: #111;
+    }
+    header {
+      padding: 28px 20px;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      letter-spacing: .2px;
+    }
+    header p {
+      margin: 0;
+      color: #4b5563;
+      font-size: 14px;
+    }
+    main {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 0 16px 40px;
+    }
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 16px rgba(0,0,0,.05);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 720px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input[type="number"], input[type="text"], select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color .15s ease;
+      background: #fff;
+    }
+    input:focus, select:focus { border-color: #111827; }
+    .suffix {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .suffix span {
+      white-space: nowrap;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    button {
+      appearance: none;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .primary { background: #111827; color: #fff; }
+    .ghost { background: #f3f4f6; color: #111827; }
+    .result {
+      font-size: 18px;
+      font-weight: 700;
+      background: #f9fafb;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      display: inline-block;
+    }
+    .muted { color: #4b5563; font-weight: 400; }
+    details summary {
+      cursor: pointer;
+      font-weight: 600;
+      margin: 8px 0;
+    }
+    code, kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,"Liberation Mono","Courier New", monospace;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      padding: .1rem .35rem;
+      border-radius: 6px;
+      font-size: 85%;
+    }
+    footer {
+      color: #6b7280;
+      font-size: 13px;
+      margin-top: 18px;
+    }
+    .inline-note {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Calculadora – Tamanho da Amostra (Yamane)</h1>
+    <p>Entre com o tamanho da população <em>(N)</em> e o nível de precisão desejado <em>(e)</em> para obter <strong>n</strong>.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="grid">
+        <div>
+          <label for="N">Tamanho da população (N)</label>
+          <input id="N" type="number" min="1" step="1" placeholder="Ex.: 5000">
+          <div class="inline-note">N deve ser um inteiro &ge; 1.</div>
+        </div>
+
+        <div>
+          <label for="precision">Nível de precisão (e)</label>
+          <div class="suffix">
+            <input id="precision" type="number" min="0.0001" max="0.5" step="0.0001" placeholder="Ex.: 0,05 (5%)" inputmode="decimal">
+            <span>0 &lt; e &le; 0,5</span>
+          </div>
+          <div class="inline-note">Você pode usar <kbd>0,05</kbd> para 5% ou <kbd>0.05</kbd> (ponto). O app aceita vírgula ou ponto.</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="calcBtn">Calcular</button>
+        <button class="ghost" id="resetBtn">Limpar</button>
+      </div>
+
+      <div id="output" style="margin-top:14px; display:none;">
+        <div class="result">
+          n = <span id="nValue">—</span>
+          <span class="muted" id="nDetails"></span>
+        </div>
+      </div>
+
+      <details style="margin-top:10px;">
+        <summary>Ver fórmula e passos</summary>
+        <p><strong>Fórmula de Yamane (1967)</strong>:</p>
+        <p style="margin-left:8px;"><code>n = N / (1 + N·e²)</code></p>
+        <ul>
+          <li><strong>N</strong> = tamanho da população finita</li>
+          <li><strong>e</strong> = nível de precisão (margem de erro desejada, em proporção; ex.: 5% ⇒ 0,05)</li>
+        </ul>
+        <p>O resultado é arredondado para cima para garantir um tamanho inteiro de amostra.</p>
+      </details>
+    </section>
+
+    <footer class="card">
+      <div class="social">
+        🔗 Me acompanhe: 
+        <a href="https://www.instagram.com/prof.lage" target="_blank">Instagram</a> | 
+        <a href="https://www.linkedin.com/in/lage" target="_blank">LinkedIn</a>
+      </div>
+    </footer>
+
+    <section class="card">
+      <h3 style="margin-top:0;">Exemplo rápido</h3>
+      <p>Para <strong>N = 5.000</strong> e <strong>e = 0,05</strong> (5%):</p>
+      <p><code>n = 5000 / (1 + 5000 · 0,05²) = 5000 / (1 + 5000 · 0,0025) = 5000 / 13,5 ≈ 370,37</code> ⇒ <strong>371 pessoas</strong>.</p>
+    </section>
+
+    <footer class="card">
+      <p><strong>Observações importantes</strong></p>
+      <ul>
+        <li>A fórmula de Yamane é uma aproximação com amostragem aleatória simples; não incorpora efeito de desenho, estratos, ou correção por não-resposta. Ou seja, ela só vale para amostragem aleatória simples, não corrige se você usar métodos mais complexos de amostragem e não compensa pessoas que não vão responder.</li>
+        <li>Use <em>e</em> pequeno para maior precisão (ex.: 0,03), o que aumenta <em>n</em>, pois quanto menor a margem de erro desejada, maior precisa ser a amostra para reduzir a variabilidade das estimativas e garantir que os resultados estejam mais próximos do valor real da população.</li>
+        <li>Se precisar incluir taxa de não-resposta, divida o <em>n</em> obtido por <code>(1 - taxa)</code> e arredonde para cima. Por exemplo, se precisar incluir taxa de não-resposta, divida o <em>n</em> obtido por <code>(1 - taxa)</code> e arredonde para cima, por exemplo, se o cálculo der <em>n = 400</em> e você esperar 20% de não-resposta (taxa = 0,20), então <code>n<sub>ajustado</sub> = 400 / (1 - 0,20) = 400 / 0,8 = 500</code>. Ou seja, será necessário selecionar <strong>500 pessoas</strong> para garantir que aproximadamente 400 respondam.</li>
+      </ul>
+    </footer>
+  </main>
+
+  <script>
+    function parseLocaleNumber(val) {
+      if (typeof val !== 'string') return NaN;
+      // allow comma or dot as decimal separator
+      val = val.trim().replace(/\\./g, '.').replace(/,(?=\\d)/g, '.');
+      return Number(val);
+    }
+
+    function formatNumber(x) {
+      return new Intl.NumberFormat('pt-BR').format(x);
+    }
+
+    function calcYamane(N, e) {
+      // n = N / (1 + N*e^2)
+      return N / (1 + N * Math.pow(e, 2));
+    }
+
+    const $ = (id) => document.getElementById(id);
+    const NInput = $('N');
+    const eInput = $('precision');
+    const output = $('output');
+    const nValue = $('nValue');
+    const nDetails = $('nDetails');
+
+    $('calcBtn').addEventListener('click', () => {
+      const Nraw = NInput.value;
+      const eraw = eInput.value;
+
+      const N = parseInt(Nraw, 10);
+      const e = parseLocaleNumber(eraw);
+
+      // Validate
+      let errors = [];
+      if (!Number.isFinite(N) || N < 1) errors.push('Informe um N inteiro ≥ 1.');
+      if (!(e > 0 && e <= 0.5)) errors.push('Informe e como proporção em (0, 0,5].');
+
+      if (errors.length) {
+        alert(errors.join('\\n'));
+        return;
+      }
+
+      const n = calcYamane(N, e);
+      const nCeil = Math.ceil(n);
+      nValue.textContent = formatNumber(nCeil);
+      nDetails.textContent = ` (valor bruto ≈ ${formatNumber(n.toFixed(2))})`;
+      output.style.display = 'block';
+    });
+
+    $('resetBtn').addEventListener('click', () => {
+      NInput.value = '';
+      eInput.value = '';
+      output.style.display = 'none';
+    });
+  </script>
+</body>
+</html>
