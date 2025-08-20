@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Correlações - Pearson & Kendall</title>
+
+<footer class="card">
+      <div class="social">
+        🔗 Me acompanhe: 
+        <a href="https://www.instagram.com/prof.lage" target="_blank">Instagram</a> | 
+        <a href="https://www.linkedin.com/in/lage" target="_blank">LinkedIn</a>
+      </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .variable-input {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .variable-input h3 {
+            margin-top: 0;
+            color: #fff;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
+            margin: 5px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(238, 90, 36, 0.6);
+        }
+        
+        .gauge-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+        
+        .gauge-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .single-gauge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .gauge-container h3 {
+            margin-top: 0;
+            text-align: center;
+        }
+        
+        .gauge-svg {
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+        
+        .data-generator {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .data-generator h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #4ecdc4;
+        }
+        
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .checkbox-group label:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .checkbox-group input[type="radio"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+        
+        .generator-options {
+            text-align: center;
+        }
+        
+        .generator-options label {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .generator-options select {
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            height: 400px;
+            position: relative;
+        }
+        
+        .chart-container h3 {
+            margin-top: 0;
+            color: #333;
+            text-align: center;
+        }
+        
+        .chart-canvas {
+            background: white;
+            border-radius: 10px;
+        }
+        
+        .result-info {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            grid-column: 1 / -1;
+        }
+        
+        .correlation-strength {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .sample-data {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            grid-column: 1 / -1;
+        }
+        
+        .sample-data button {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            margin: 5px;
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+        
+        .interpretation {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .interpretation h4 {
+            margin-top: 0;
+            color: #4ecdc4;
+        }
+        
+        @media (max-width: 600px) {
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Calculadora de Correlações - Pearson & Kendall</h1>
+        <h2>Prof. André Lage Freitas. <a href="https://www.instagram.com/prof.lage" target="_blank">Instagram</a>,  <a href="https://www.linkedin.com/in/lage" target="_blank">LinkedIn</a> </h2>
+
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="input-section">
+                    <div class="variable-input">
+                        <h3>Variável X</h3>
+                        <textarea id="variableX" placeholder="Digite os valores de X separados por vírgula ou quebra de linha&#10;Exemplo: 1, 2, 3, 4, 5"></textarea>
+                    </div>
+                    <div class="variable-input">
+                        <h3>Variável Y</h3>
+                        <textarea id="variableY" placeholder="Digite os valores de Y separados por vírgula ou quebra de linha&#10;Exemplo: 2, 4, 6, 8, 10"></textarea>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button onclick="calculatePearson()">🔍 Calcular Correlação</button>
+                    <button onclick="clearData()">🗑️ Limpar Dados</button>
+                    <button onclick="generateData()">🎲 Gerar Dados</button>
+                </div>
+                
+                <div class="data-generator">
+                    <h4>🎯 Gerador de Dados</h4>
+                    <div class="checkbox-group">
+                        <label><input type="radio" name="dataType" value="positive" checked> ✅ Correlação Positiva</label>
+                        <label><input type="radio" name="dataType" value="negative"> ❌ Correlação Negativa</label>
+                        <label><input type="radio" name="dataType" value="none"> ⚪ Sem Correlação</label>
+                        <label><input type="radio" name="dataType" value="random"> 🎲 Aleatório</label>
+                    </div>
+                    <div class="generator-options">
+                        <label>Número de pontos: 
+                            <select id="dataPoints">
+                                <option value="10">10</option>
+                                <option value="20" selected>20</option>
+                                <option value="30">30</option>
+                                <option value="50">50</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="gauge-container">
+                    <h3>Coeficientes de Correlação</h3>
+                    <div class="gauge-row">
+                        <div class="single-gauge">
+                            <h4>Pearson (r)</h4>
+                            <svg class="gauge-svg" width="250" height="140" viewBox="0 0 250 140">
+                                <defs>
+                                    <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#ff4757;stop-opacity:1" />
+                                        <stop offset="25%" style="stop-color:#ff6b6b;stop-opacity:1" />
+                                        <stop offset="50%" style="stop-color:#feca57;stop-opacity:1" />
+                                        <stop offset="75%" style="stop-color:#48dbfb;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#1dd1a1;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                
+                                <!-- Fundo do gauge Pearson -->
+                                <path d="M 30 110 A 90 90 0 0 1 220 110" 
+                                      fill="none" 
+                                      stroke="rgba(255,255,255,0.2)" 
+                                      stroke-width="12"/>
+                                
+                                <!-- Arco colorido do gauge Pearson -->
+                                <path d="M 30 110 A 90 90 0 0 1 220 110" 
+                                      fill="none" 
+                                      stroke="url(#gaugeGradient)" 
+                                      stroke-width="10"/>
+                                
+                                <!-- Marcações do gauge Pearson -->
+                                <g id="pearsonMarks"></g>
+                                
+                                <!-- Ponteiro Pearson -->
+                                <g id="pearsonPointer" transform="translate(125, 110)">
+                                    <circle cx="0" cy="0" r="5" fill="#fff" stroke="#333" stroke-width="2"/>
+                                    <line x1="0" y1="0" x2="0" y2="-80" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+                                    <polygon points="-5,-75 0,-90 5,-75" fill="#ff4757"/>
+                                </g>
+                                
+                                <!-- Labels Pearson -->
+                                <text x="30" y="125" text-anchor="middle" fill="white" font-size="9" font-weight="bold">-1</text>
+                                <text x="125" y="40" text-anchor="middle" fill="white" font-size="9" font-weight="bold">0</text>
+                                <text x="220" y="125" text-anchor="middle" fill="white" font-size="9" font-weight="bold">+1</text>
+                                
+                                <!-- Valor atual Pearson -->
+                                <text id="pearsonValue" x="125" y="135" text-anchor="middle" fill="white" font-size="14" font-weight="bold">0.00</text>
+                            </svg>
+                        </div>
+                        
+                        <div class="single-gauge">
+                            <h4>Kendall (τ)</h4>
+                            <svg class="gauge-svg" width="250" height="140" viewBox="0 0 250 140">
+                                <defs>
+                                    <linearGradient id="kendallGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#9b59b6;stop-opacity:1" />
+                                        <stop offset="25%" style="stop-color:#e74c3c;stop-opacity:1" />
+                                        <stop offset="50%" style="stop-color:#f39c12;stop-opacity:1" />
+                                        <stop offset="75%" style="stop-color:#3498db;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#2ecc71;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                
+                                <!-- Fundo do gauge Kendall -->
+                                <path d="M 30 110 A 90 90 0 0 1 220 110" 
+                                      fill="none" 
+                                      stroke="rgba(255,255,255,0.2)" 
+                                      stroke-width="12"/>
+                                
+                                <!-- Arco colorido do gauge Kendall -->
+                                <path d="M 30 110 A 90 90 0 0 1 220 110" 
+                                      fill="none" 
+                                      stroke="url(#kendallGradient)" 
+                                      stroke-width="10"/>
+                                
+                                <!-- Marcações do gauge Kendall -->
+                                <g id="kendallMarks"></g>
+                                
+                                <!-- Ponteiro Kendall -->
+                                <g id="kendallPointer" transform="translate(125, 110)">
+                                    <circle cx="0" cy="0" r="5" fill="#fff" stroke="#333" stroke-width="2"/>
+                                    <line x1="0" y1="0" x2="0" y2="-80" stroke="#9b59b6" stroke-width="3" stroke-linecap="round"/>
+                                    <polygon points="-5,-75 0,-90 5,-75" fill="#9b59b6"/>
+                                </g>
+                                
+                                <!-- Labels Kendall -->
+                                <text x="30" y="125" text-anchor="middle" fill="white" font-size="9" font-weight="bold">-1</text>
+                                <text x="125" y="40" text-anchor="middle" fill="white" font-size="9" font-weight="bold">0</text>
+                                <text x="220" y="125" text-anchor="middle" fill="white" font-size="9" font-weight="bold">+1</text>
+                                
+                                <!-- Valor atual Kendall -->
+                                <text id="kendallValue" x="125" y="135" text-anchor="middle" fill="white" font-size="14" font-weight="bold">0.00</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="chart-container">
+                    <h3>Gráfico de Dispersão</h3>
+                    <canvas id="scatterChart" class="chart-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="result-info" id="resultInfo" style="display: none;">
+            <h3>📈 Análise Estatística</h3>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="pearsonResult">0</div>
+                    <div>Pearson (r)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="kendallResult">0</div>
+                    <div>Kendall (τ)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="r2Value">0</div>
+                    <div>Coef. Determinação (r²)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="dataCount">0</div>
+                    <div>Observações (n)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="correlationStrength" class="correlation-strength">-</div>
+                    <div>Força (Pearson)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="kendallStrength" class="correlation-strength">-</div>
+                    <div>Força (Kendall)</div>
+                </div>
+            </div>
+            
+            <div class="interpretation">
+                <h4>📝 Interpretação Didática</h4>
+                <div id="interpretationText">Insira dados para ver a interpretação estatística.</div>
+                
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+                    <h5>🔍 Comparação entre Coeficientes:</h5>
+                    <div id="comparisonText">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sample-data">
+            <h4>📚 Dados de Exemplo para Ensino</h4>
+            <p>Clique nos exemplos abaixo para demonstrar diferentes tipos de correlação:</p>
+            <button onclick="loadSampleData('perfect_positive')">Correlação Perfeita Positiva (r = +1)</button>
+            <button onclick="loadSampleData('strong_positive')">Correlação Forte Positiva (r ≈ 0.9)</button>
+            <button onclick="loadSampleData('moderate_positive')">Correlação Moderada Positiva (r ≈ 0.6)</button>
+            <button onclick="loadSampleData('weak_positive')">Correlação Fraca Positiva (r ≈ 0.3)</button>
+            <br>
+            <button onclick="loadSampleData('none')">Sem Correlação (r ≈ 0)</button>
+            <br>
+            <button onclick="loadSampleData('weak_negative')">Correlação Fraca Negativa (r ≈ -0.3)</button>
+            <button onclick="loadSampleData('moderate_negative')">Correlação Moderada Negativa (r ≈ -0.6)</button>
+            <button onclick="loadSampleData('strong_negative')">Correlação Forte Negativa (r ≈ -0.9)</button>
+            <button onclick="loadSampleData('perfect_negative')">Correlação Perfeita Negativa (r = -1)</button>
+        </div>
+    </div>
+
+    <script>
+        let scatterChart = null;
+
+        // Inicializar marcações dos gauges
+        function initializeGauges() {
+            // Marcações do gauge Pearson
+            const pearsonMarks = document.getElementById('pearsonMarks');
+            for (let i = -10; i <= 10; i++) {
+                const angle = (i + 10) * 9 - 90;
+                const radians = (angle * Math.PI) / 180;
+                const x1 = 125 + 75 * Math.cos(radians);
+                const y1 = 110 + 75 * Math.sin(radians);
+                const x2 = 125 + 85 * Math.cos(radians);
+                const y2 = 110 + 85 * Math.sin(radians);
+                
+                const mark = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                mark.setAttribute('x1', x1);
+                mark.setAttribute('y1', y1);
+                mark.setAttribute('x2', x2);
+                mark.setAttribute('y2', y2);
+                mark.setAttribute('stroke', 'white');
+                mark.setAttribute('stroke-width', i % 5 === 0 ? '2' : '1');
+                mark.setAttribute('opacity', '0.7');
+                
+                pearsonMarks.appendChild(mark);
+            }
+
+            // Marcações do gauge Kendall
+            const kendallMarks = document.getElementById('kendallMarks');
+            for (let i = -10; i <= 10; i++) {
+                const angle = (i + 10) * 9 - 90;
+                const radians = (angle * Math.PI) / 180;
+                const x1 = 125 + 75 * Math.cos(radians);
+                const y1 = 110 + 75 * Math.sin(radians);
+                const x2 = 125 + 85 * Math.cos(radians);
+                const y2 = 110 + 85 * Math.sin(radians);
+                
+                const mark = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                mark.setAttribute('x1', x1);
+                mark.setAttribute('y1', y1);
+                mark.setAttribute('x2', x2);
+                mark.setAttribute('y2', y2);
+                mark.setAttribute('stroke', 'white');
+                mark.setAttribute('stroke-width', i % 5 === 0 ? '2' : '1');
+                mark.setAttribute('opacity', '0.7');
+                
+                kendallMarks.appendChild(mark);
+            }
+        }
+
+        function parseData(dataString) {
+            return dataString
+                .split(/[,\n\r\t]+/)
+                .map(val => val.trim())
+                .filter(val => val !== '')
+                .map(val => parseFloat(val))
+                .filter(val => !isNaN(val));
+        }
+
+        function calculateKendallTau(x, y) {
+            if (x.length !== y.length || x.length < 2) {
+                throw new Error('Os arrays devem ter o mesmo tamanho e pelo menos 2 elementos');
+            }
+
+            const n = x.length;
+            let concordant = 0;
+            let discordant = 0;
+
+            for (let i = 0; i < n - 1; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    const signX = Math.sign(x[j] - x[i]);
+                    const signY = Math.sign(y[j] - y[i]);
+                    
+                    if (signX * signY > 0) {
+                        concordant++;
+                    } else if (signX * signY < 0) {
+                        discordant++;
+                    }
+                    // Se signX * signY === 0, é um empate e não conta
+                }
+            }
+
+            const totalPairs = n * (n - 1) / 2;
+            return (concordant - discordant) / totalPairs;
+        }
+
+        function calculatePearsonCoefficient(x, y) {
+            if (x.length !== y.length || x.length < 2) {
+                throw new Error('Os arrays devem ter o mesmo tamanho e pelo menos 2 elementos');
+            }
+
+            const n = x.length;
+            const sumX = x.reduce((a, b) => a + b, 0);
+            const sumY = y.reduce((a, b) => a + b, 0);
+            const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+            const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
+            const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0);
+
+            const numerator = n * sumXY - sumX * sumY;
+            const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+            if (denominator === 0) {
+                return 0;
+            }
+
+            return numerator / denominator;
+        }
+
+        function getCorrelationStrength(r) {
+            const absR = Math.abs(r);
+            if (absR >= 0.9) return 'Muito Forte';
+            if (absR >= 0.7) return 'Forte';
+            if (absR >= 0.5) return 'Moderada';
+            if (absR >= 0.3) return 'Fraca';
+            return 'Muito Fraca';
+        }
+
+        function getInterpretation(pearson, kendall, r2, n) {
+            const absPearson = Math.abs(pearson);
+            const absKendall = Math.abs(kendall);
+            const pearsonDirection = pearson > 0 ? 'positiva' : pearson < 0 ? 'negativa' : 'inexistente';
+            const kendallDirection = kendall > 0 ? 'positiva' : kendall < 0 ? 'negativa' : 'inexistente';
+            const pearsonStrength = getCorrelationStrength(pearson).toLowerCase();
+            const kendallStrength = getCorrelationStrength(kendall).toLowerCase();
+            
+            let interpretation = `<strong>Coeficiente de Pearson:</strong> r = ${pearson.toFixed(3)} indica uma correlação ${pearsonDirection} ${pearsonStrength}. `;
+            interpretation += `O r² = ${r2.toFixed(3)} mostra que ${(r2 * 100).toFixed(1)}% da variação em Y é explicada por X.<br><br>`;
+            
+            interpretation += `<strong>Coeficiente de Kendall:</strong> τ = ${kendall.toFixed(3)} indica uma correlação ${kendallDirection} ${kendallStrength} baseada em concordância de pares ordenados.<br><br>`;
+            
+            if (absPearson >= 0.7 || absKendall >= 0.7) {
+                interpretation += "Ambos os coeficientes sugerem uma relação forte entre as variáveis.";
+            } else if (absPearson >= 0.3 || absKendall >= 0.3) {
+                interpretation += "Os coeficientes indicam uma relação moderada a fraca entre as variáveis.";
+            } else {
+                interpretation += "Ambos os coeficientes sugerem uma relação muito fraca ou inexistente.";
+            }
+            
+            return interpretation;
+        }
+
+        function getComparison(pearson, kendall) {
+            const diff = Math.abs(pearson - kendall);
+            let comparison = `<strong>Pearson (${pearson.toFixed(3)}) vs Kendall (${kendall.toFixed(3)}):</strong><br>`;
+            
+            if (diff < 0.1) {
+                comparison += "Os coeficientes são muito similares, indicando consistência na medição da correlação.";
+            } else if (diff < 0.3) {
+                comparison += "Há diferença moderada entre os coeficientes. Pearson é mais sensível a outliers e relações lineares.";
+            } else {
+                comparison += "Diferença significativa! Pearson mede correlação linear, enquanto Kendall mede concordância monotônica.";
+            }
+            
+            comparison += "<br><br><em>Dica:</em> Use Pearson para relações lineares e Kendall para dados ordinais ou com outliers.";
+            
+            return comparison;
+        }
+
+        function animatePointer(pointerId, targetAngle) {
+            const pointer = document.getElementById(pointerId);
+            const startAngle = getCurrentPointerAngle(pointerId);
+            const angleDiff = targetAngle - startAngle;
+            const duration = 1000;
+            const startTime = Date.now();
+
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                const currentAngle = startAngle + angleDiff * easeProgress;
+                
+                pointer.setAttribute('transform', `translate(125, 110) rotate(${currentAngle})`);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            }
+            
+            animate();
+        }
+
+        function getCurrentPointerAngle(pointerId) {
+            const pointer = document.getElementById(pointerId);
+            const transform = pointer.getAttribute('transform');
+            const match = transform.match(/rotate\(([^)]+)\)/);
+            return match ? parseFloat(match[1]) : 0;
+        }
+
+        function updateGauges(pearson, kendall) {
+            const pearsonAngle = pearson * 90;
+            const kendallAngle = kendall * 90;
+            
+            animatePointer('pearsonPointer', pearsonAngle);
+            animatePointer('kendallPointer', kendallAngle);
+            
+            document.getElementById('pearsonValue').textContent = pearson.toFixed(3);
+            document.getElementById('kendallValue').textContent = kendall.toFixed(3);
+        }
+
+        function createScatterChart(xData, yData, pearson, kendall) {
+            const ctx = document.getElementById('scatterChart').getContext('2d');
+            
+            if (scatterChart) {
+                scatterChart.destroy();
+            }
+
+            const data = xData.map((x, i) => ({ x: x, y: yData[i] }));
+            
+            // Calcular linha de tendência
+            const n = xData.length;
+            const sumX = xData.reduce((a, b) => a + b, 0);
+            const sumY = yData.reduce((a, b) => a + b, 0);
+            const sumXY = xData.reduce((sum, xi, i) => sum + xi * yData[i], 0);
+            const sumX2 = xData.reduce((sum, xi) => sum + xi * xi, 0);
+            
+            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+            
+            const minX = Math.min(...xData);
+            const maxX = Math.max(...xData);
+            const trendLine = [
+                { x: minX, y: slope * minX + intercept },
+                { x: maxX, y: slope * maxX + intercept }
+            ];
+
+            scatterChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Dados Observados',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }, {
+                        label: 'Linha de Tendência',
+                        data: trendLine,
+                        type: 'line',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Pearson: r = ${pearson.toFixed(3)} | Kendall: τ = ${kendall.toFixed(3)}`,
+                            color: '#333',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        legend: {
+                            display: true,
+                            labels: { color: '#333' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Variável X',
+                                color: '#333',
+                                font: { weight: 'bold' }
+                            },
+                            ticks: { color: '#333' },
+                            grid: { color: 'rgba(0,0,0,0.1)' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Variável Y',
+                                color: '#333',
+                                font: { weight: 'bold' }
+                            },
+                            ticks: { color: '#333' },
+                            grid: { color: 'rgba(0,0,0,0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function calculatePearson() {
+            try {
+                const xData = parseData(document.getElementById('variableX').value);
+                const yData = parseData(document.getElementById('variableY').value);
+
+                if (xData.length === 0 || yData.length === 0) {
+                    alert('Por favor, insira dados válidos para ambas as variáveis.');
+                    return;
+                }
+
+                if (xData.length !== yData.length) {
+                    alert('As variáveis X e Y devem ter o mesmo número de valores.');
+                    return;
+                }
+
+                if (xData.length < 2) {
+                    alert('É necessário pelo menos 2 pares de dados para calcular a correlação.');
+                    return;
+                }
+
+                const correlation = calculatePearsonCoefficient(xData, yData);
+                const kendall = calculateKendallTau(xData, yData);
+                const r2 = correlation * correlation;
+                const strength = getCorrelationStrength(correlation);
+                const kendallStrength = getCorrelationStrength(kendall);
+                const interpretation = getInterpretation(correlation, kendall, r2, xData.length);
+                const comparison = getComparison(correlation, kendall);
+
+                // Atualizar gauges
+                updateGauges(correlation, kendall);
+
+                // Criar gráfico de dispersão
+                createScatterChart(xData, yData, correlation, kendall);
+
+                // Mostrar resultados
+                document.getElementById('resultInfo').style.display = 'block';
+                document.getElementById('pearsonResult').textContent = correlation.toFixed(4);
+                document.getElementById('kendallResult').textContent = kendall.toFixed(4);
+                document.getElementById('r2Value').textContent = r2.toFixed(4);
+                document.getElementById('correlationStrength').textContent = strength;
+                document.getElementById('kendallStrength').textContent = kendallStrength;
+                document.getElementById('dataCount').textContent = xData.length;
+                document.getElementById('interpretationText').innerHTML = interpretation;
+                document.getElementById('comparisonText').innerHTML = comparison;
+
+                // Adicionar cores baseadas na força da correlação
+                const strengthElement = document.getElementById('correlationStrength');
+                const kendallStrengthElement = document.getElementById('kendallStrength');
+                
+                const absCorr = Math.abs(correlation);
+                const absKendall = Math.abs(kendall);
+                
+                if (absCorr >= 0.7) strengthElement.style.color = '#1dd1a1';
+                else if (absCorr >= 0.5) strengthElement.style.color = '#48dbfb';
+                else if (absCorr >= 0.3) strengthElement.style.color = '#feca57';
+                else strengthElement.style.color = '#ff6b6b';
+
+                if (absKendall >= 0.7) kendallStrengthElement.style.color = '#1dd1a1';
+                else if (absKendall >= 0.5) kendallStrengthElement.style.color = '#48dbfb';
+                else if (absKendall >= 0.3) kendallStrengthElement.style.color = '#feca57';
+                else kendallStrengthElement.style.color = '#ff6b6b';
+
+            } catch (error) {
+                alert('Erro no cálculo: ' + error.message);
+            }
+        }
+
+        function clearData() {
+            document.getElementById('variableX').value = '';
+            document.getElementById('variableY').value = '';
+            document.getElementById('resultInfo').style.display = 'none';
+            
+            if (scatterChart) {
+                scatterChart.destroy();
+                scatterChart = null;
+            }
+            
+            // Reset gauges
+            updateGauges(0, 0);
+        }
+
+        function generateData() {
+            const dataType = document.querySelector('input[name="dataType"]:checked').value;
+            const numPoints = parseInt(document.getElementById('dataPoints').value);
+            
+            let xData = [];
+            let yData = [];
+            
+            // Gerar valores de X sequenciais
+            for (let i = 1; i <= numPoints; i++) {
+                xData.push(i);
+            }
+            
+            switch(dataType) {
+                case 'positive':
+                    // Correlação positiva forte com algum ruído
+                    for (let i = 0; i < numPoints; i++) {
+                        const baseY = 2 + 1.5 * xData[i]; // Linha base positiva
+                        const noise = (Math.random() - 0.5) * 3; // Ruído controlado
+                        yData.push(Math.round((baseY + noise) * 100) / 100);
+                    }
+                    break;
+                    
+                case 'negative':
+                    // Correlação negativa forte com algum ruído
+                    for (let i = 0; i < numPoints; i++) {
+                        const baseY = 50 - 1.8 * xData[i]; // Linha base negativa
+                        const noise = (Math.random() - 0.5) * 4; // Ruído controlado
+                        yData.push(Math.round((baseY + noise) * 100) / 100);
+                    }
+                    break;
+                    
+                case 'none':
+                    // Sem correlação - valores aleatórios independentes
+                    const meanY = 25;
+                    const stdY = 8;
+                    for (let i = 0; i < numPoints; i++) {
+                        // Distribuição normal aproximada usando Box-Muller
+                        const u1 = Math.random();
+                        const u2 = Math.random();
+                        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+                        const y = meanY + stdY * z;
+                        yData.push(Math.round(y * 100) / 100);
+                    }
+                    break;
+                    
+                case 'random':
+                    // Completamente aleatório
+                    for (let i = 0; i < numPoints; i++) {
+                        yData.push(Math.round((Math.random() * 100) * 100) / 100);
+                    }
+                    // Embaralhar também os valores de X para maior aleatoriedade
+                    xData = xData.map(() => Math.round((Math.random() * numPoints + 1) * 100) / 100);
+                    break;
+            }
+            
+            // Preencher os campos de entrada
+            document.getElementById('variableX').value = xData.join(', ');
+            document.getElementById('variableY').value = yData.join(', ');
+            
+            // Calcular automaticamente após gerar os dados
+            setTimeout(() => {
+                calculatePearson();
+            }, 300);
+        }
+
+        function loadSampleData(type) {
+            let xData, yData;
+            
+            switch(type) {
+                case 'perfect_positive':
+                    xData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                    yData = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
+                    break;
+                case 'strong_positive':
+                    xData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                    yData = [2.1, 3.8, 6.2, 7.9, 9.8, 12.1, 13.9, 16.2, 17.8, 20.1];
+                    break;
+                case 'moderate_positive':
+                    xData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                    yData = [3, 5, 4, 7, 8, 9, 10, 11, 13, 12];
+                    break;
+                case 'weak_positive':
+                    xData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                    yData = [3, 7, 4, 8, 6, 9, 5, 10, 7, 11];
+                    break;
+                case 'none':
+                    xData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                    yData = [5, 3, 8, 2, 7, 4, 9, 1, 6, 5];
+                    break;
+                case 'weak_negative':
+                    xData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                    yData = [8, 6, 9, 5, 7, 4, 8, 3, 5, 2];
+                    break;
+                case 'moderate_negative':
+                    xData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                    yData = [12, 10, 11, 8, 7, 6, 5, 4, 3, 1];
+                    break;
+                case 'strong_negative':
+                    xData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                    yData = [19.9, 18.1, 16.2, 14.1, 11.8, 10.2, 8.1, 5.9, 4.2, 1.8];
+                    break;
+                case 'perfect_negative':
+                    xData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                    yData = [20, 18, 16, 14, 12, 10, 8, 6, 4, 2];
+                    break;
+            }
+            
+            document.getElementById('variableX').value = xData.join(', ');
+            document.getElementById('variableY').value = yData.join(', ');
+        }
+
+        // Inicializar a interface
+        initializeGauges();
+        
+        // Adicionar eventos para Enter nas textareas
+        document.getElementById('variableX').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                calculatePearson();
+            }
+        });
+        
+        document.getElementById('variableY').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                calculatePearson();
+            }
+        });
+    </script>
+</body>
+</html>
